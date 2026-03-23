@@ -69,7 +69,7 @@ public final class AnnouncementService {
             startScheduler(config.titleConfig(), "title", this::broadcastTitle);
         }
         if (config.bossbarConfig().enabled()) {
-            startScheduler(config.bossbarConfig(), "bossbar", this::startBossbarCycling);
+            startBossbarCycling();
         }
     }
 
@@ -247,7 +247,7 @@ public final class AnnouncementService {
 
     private void startBossbarCycling() {
         cancelActiveBossbar();
-        
+
         List<String> bossbarMessages = config.bossbarConfig().messages();
         if (bossbarMessages.isEmpty()) {
             return;
@@ -257,22 +257,29 @@ public final class AnnouncementService {
             plugin.logger().info("Starting bossbar cycling with {} entries", bossbarMessages.size());
         }
 
-        bossbarIndex = 0;
+        if (!config.bossbarConfig().randomSelection()) {
+            bossbarIndex = 0;
+        }
         showNextBossbarInCycle();
     }
 
     private void showNextBossbarInCycle() {
-        if (bossbarIndex >= config.bossbarConfig().messages().size()) {
-            if (config.debug()) {
-                plugin.logger().info("Bossbar cycle complete, resetting");
-            }
-            bossbarIndex = 0;
+        List<String> messages = config.bossbarConfig().messages();
+        if (messages.isEmpty()) {
             return;
         }
 
-        String message = config.bossbarConfig().messages().get(bossbarIndex);
-        int currentIndex = bossbarIndex;
-        bossbarIndex++;
+        int currentIndex;
+        if (config.bossbarConfig().randomSelection()) {
+            currentIndex = random.nextInt(messages.size());
+        } else {
+            if (bossbarIndex >= messages.size()) {
+                bossbarIndex = 0;
+            }
+            currentIndex = bossbarIndex;
+            bossbarIndex++;
+        }
+        String message = messages.get(currentIndex);
 
         long totalSeconds = Math.max(1, config.bossbarConfig().intervalSeconds());
 
@@ -290,7 +297,7 @@ public final class AnnouncementService {
         }
 
         if (config.debug()) {
-            plugin.logger().info("Showing bossbar {} of {}: {}", currentIndex + 1, config.bossbarConfig().messages().size(), message);
+            plugin.logger().info("Showing bossbar {} of {}: {}", currentIndex + 1, messages.size(), message);
         }
 
         AtomicInteger elapsed = new AtomicInteger(0);
@@ -315,7 +322,7 @@ public final class AnnouncementService {
                     }
                     server.getScheduler()
                         .buildTask(plugin, this::showNextBossbarInCycle)
-                        .delay(500, TimeUnit.MILLISECONDS)
+                        .delay(100, TimeUnit.MILLISECONDS)
                         .schedule();
                 }
             })
