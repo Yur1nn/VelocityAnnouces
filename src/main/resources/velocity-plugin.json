@@ -1,0 +1,8 @@
+{
+  "id": "velocityannouces",
+  "name": "VelocityAnnouces",
+  "version": "1.0.0",
+  "description": "Lightweight announcement plugin for Velocity",
+  "authors": ["OneLimit"],
+  "main": "dev.onelimit.velocityannouces.VelocityAnnoucesPlugin"
+}

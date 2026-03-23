@@ -1,0 +1,37 @@
+announcer:
+  enabled: true
+  interval-seconds: 120
+  # random | round-robin
+  selection: random
+
+delivery:
+  title:
+    fade-in-ms: 400
+    stay-ms: 2200
+    fade-out-ms: 500
+  bossbar:
+    color: blue
+    overlay: progress
+    progress: 1.0
+    duration-seconds: 5
+
+command:
+  enabled: true
+  aliases: ["vannounce", "announce"]
+
+# Supports MiniMessage + <modern>...</modern>.
+# type can be: chat, actionbar, title, bossbar
+messages:
+  auto:
+    - type: chat
+      message: "<modern>join our discord</modern> <gray>-</gray> <aqua>discord.gg/example"
+
+    - type: actionbar
+      message: "<green>Store:</green> <modern>shop.example.net</modern>"
+
+    - type: title
+      title: "<gold><modern>weekly events</modern>"
+      subtitle: "<yellow>Saturday 8PM UTC"
+
+    - type: bossbar
+      message: "<aqua><modern>double rewards weekend</modern>"

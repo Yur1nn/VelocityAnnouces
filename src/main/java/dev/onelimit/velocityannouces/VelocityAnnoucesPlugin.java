@@ -1,0 +1,83 @@
+package dev.onelimit.velocityannouces;
+
+import com.google.inject.Inject;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandMeta;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.ProxyServer;
+import dev.onelimit.velocityannouces.announce.AnnouncementService;
+import dev.onelimit.velocityannouces.command.AnnounceCommand;
+import dev.onelimit.velocityannouces.config.ConfigService;
+import dev.onelimit.velocityannouces.model.PluginConfig;
+import org.slf4j.Logger;
+
+import java.nio.file.Path;
+import java.util.List;
+
+public final class VelocityAnnoucesPlugin {
+    private final ProxyServer server;
+    private final Logger logger;
+    private final Path dataDirectory;
+
+    private ConfigService configService;
+    private AnnouncementService announcementService;
+    private PluginConfig config;
+
+    @Inject
+    public VelocityAnnoucesPlugin(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
+        this.server = server;
+        this.logger = logger;
+        this.dataDirectory = dataDirectory;
+    }
+
+    @Subscribe
+    public void onProxyInitialize(ProxyInitializeEvent event) {
+        this.configService = new ConfigService(logger, dataDirectory);
+        this.announcementService = new AnnouncementService(this, server);
+
+        reload();
+        registerCommand();
+
+        logger.info("VelocityAnnouces initialized.");
+    }
+
+    @Subscribe
+    public void onProxyShutdown(ProxyShutdownEvent event) {
+        if (announcementService != null) {
+            announcementService.shutdown();
+        }
+    }
+
+    public void reload() {
+        this.config = configService.load();
+        announcementService.applyConfig(config);
+    }
+
+    private void registerCommand() {
+        if (!config.commandEnabled()) {
+            logger.info("Announcement command disabled via config.");
+            return;
+        }
+
+        List<String> aliases = config.commandAliases();
+        if (aliases.isEmpty()) {
+            aliases = List.of("vannounce");
+        }
+
+        String primary = aliases.get(0);
+        String[] secondary = aliases.size() > 1
+            ? aliases.subList(1, aliases.size()).toArray(String[]::new)
+            : new String[0];
+
+        CommandManager manager = server.getCommandManager();
+        CommandMeta meta = manager.metaBuilder(primary)
+            .aliases(secondary)
+            .plugin(this)
+            .build();
+
+        manager.register(meta, new AnnounceCommand(this, announcementService));
+    }
+}
