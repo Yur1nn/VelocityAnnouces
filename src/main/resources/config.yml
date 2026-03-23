@@ -1,19 +1,9 @@
-announcer:
-  enabled: true
-  interval-seconds: 120
-  # random | round-robin
-  selection: random
+# VelocityAnnouces Configuration
+# Config Version: This is tracked for future schema upgrades.
+config-version: 2
 
-delivery:
-  title:
-    fade-in-ms: 400
-    stay-ms: 2200
-    fade-out-ms: 500
-  bossbar:
-    color: blue
-    overlay: progress
-    progress: 1.0
-    duration-seconds: 5
+# Debug mode: Enable for verbose logging
+debug: false
 
 command:
   enabled: true
@@ -21,19 +11,49 @@ command:
   require-permission: false
   permission: "velocityannouces.admin"
 
-# Supports MiniMessage + <modern>...</modern>.
-# type can be: chat, actionbar, title, bossbar
-messages:
-  auto:
-    - type: chat
-      message: "<modern>join our discord</modern> <gray>-</gray> <aqua>discord.gg/example"
+# Chat announcements - broadcast on independent interval
+chat:
+  enabled: true
+  interval-seconds: 120
+  selection: random  # random | round-robin
+  messages:
+    - "<modern>join our discord</modern> <gray>-</gray> <aqua>discord.gg/example"
 
-    - type: actionbar
-      message: "<green>Store:</green> <modern>shop.example.net</modern>"
+# Actionbar announcements - broadcast on independent interval
+actionbar:
+  enabled: true
+  interval-seconds: 90
+  selection: random
+  messages:
+    - "<green>Store:</green> <modern>shop.example.net</modern>"
 
-    - type: title
-      title: "<gold><modern>weekly events</modern>"
+# Title announcements - broadcast on independent interval
+title:
+  enabled: true
+  interval-seconds: 150
+  selection: random
+  fade-in-ms: 400
+  stay-ms: 2200
+  fade-out-ms: 500
+  messages:
+    - title: "<gold><modern>weekly events</modern>"
       subtitle: "<yellow>Saturday 8PM UTC"
 
-    - type: bossbar
-      message: "<aqua><modern>double rewards weekend</modern>"
+# Bossbar announcements - cycles through all entries with loading animation
+bossbar:
+  enabled: true
+  interval-seconds: 120  # Duration each bossbar is shown before next rotation
+  selection: round-robin  # Cycles through in order or random selection
+  defaults:
+    color: blue
+    overlay: progress
+    animation-speed: 5
+  messages:
+    - message: "<aqua><modern>loading event 1</modern> <gray>(<progress>)"
+      color: blue
+    - message: "<green><modern>loading event 2</modern> <gray>(<progress>)"
+      color: green
+    - message: "<gold><modern>loading event 3</modern> <gray>(<progress>)"
+      color: yellow
+    - message: "<red><modern>loading event 4</modern> <gray>(<progress>)"
+      color: red

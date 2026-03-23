@@ -4,49 +4,60 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class PluginConfig {
-    private final boolean autoEnabled;
-    private final int intervalSeconds;
-    private final boolean randomPick;
+    private final int configVersion;
+    private final boolean debug;
     private final boolean commandEnabled;
     private final List<String> commandAliases;
     private final boolean commandRequirePermission;
     private final String commandPermission;
-    private final List<AnnouncementEntry> announcements;
+    private final AnnouncementTypeConfig chatConfig;
+    private final AnnouncementTypeConfig actionbarConfig;
+    private final AnnouncementTypeConfig titleConfig;
+    private final AnnouncementTypeConfig bossbarConfig;
 
     public PluginConfig(
-        boolean autoEnabled,
-        int intervalSeconds,
-        boolean randomPick,
+        int configVersion,
+        boolean debug,
         boolean commandEnabled,
         List<String> commandAliases,
         boolean commandRequirePermission,
         String commandPermission,
-        List<AnnouncementEntry> announcements
+        AnnouncementTypeConfig chatConfig,
+        AnnouncementTypeConfig actionbarConfig,
+        AnnouncementTypeConfig titleConfig,
+        AnnouncementTypeConfig bossbarConfig
     ) {
-        this.autoEnabled = autoEnabled;
-        this.intervalSeconds = intervalSeconds;
-        this.randomPick = randomPick;
+        this.configVersion = configVersion;
+        this.debug = debug;
         this.commandEnabled = commandEnabled;
         this.commandAliases = commandAliases;
         this.commandRequirePermission = commandRequirePermission;
         this.commandPermission = commandPermission;
-        this.announcements = announcements;
+        this.chatConfig = chatConfig;
+        this.actionbarConfig = actionbarConfig;
+        this.titleConfig = titleConfig;
+        this.bossbarConfig = bossbarConfig;
     }
 
     public static PluginConfig defaults() {
-        return new PluginConfig(true, 120, true, true, List.of("announce", "vannounce"), false, "velocityannouces.admin", new ArrayList<>());
+        AnnouncementTypeConfig empty = new AnnouncementTypeConfig(false, 120, true, new ArrayList<>(), 400, 2200, 500, "blue", "progress", 5);
+        return new PluginConfig(
+            2, 
+            false, 
+            true, 
+            List.of("announce", "vannounce"), 
+            false, 
+            "velocityannouces.admin",
+            empty, empty, empty, empty
+        );
     }
 
-    public boolean autoEnabled() {
-        return autoEnabled;
+    public int configVersion() {
+        return configVersion;
     }
 
-    public int intervalSeconds() {
-        return intervalSeconds;
-    }
-
-    public boolean randomPick() {
-        return randomPick;
+    public boolean debug() {
+        return debug;
     }
 
     public boolean commandEnabled() {
@@ -65,7 +76,19 @@ public final class PluginConfig {
         return commandPermission;
     }
 
-    public List<AnnouncementEntry> announcements() {
-        return announcements;
+    public AnnouncementTypeConfig chatConfig() {
+        return chatConfig;
+    }
+
+    public AnnouncementTypeConfig actionbarConfig() {
+        return actionbarConfig;
+    }
+
+    public AnnouncementTypeConfig titleConfig() {
+        return titleConfig;
+    }
+
+    public AnnouncementTypeConfig bossbarConfig() {
+        return bossbarConfig;
     }
 }

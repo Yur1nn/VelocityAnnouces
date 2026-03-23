@@ -53,11 +53,19 @@ public final class VelocityAnnoucesPlugin {
 
     public void reload() {
         this.config = configService.load();
-        announcementService.applyConfig(config);
+        if (config.debug()) {
+            logger.info("Debug mode enabled. Config version: {}", config.configVersion());
+        }
+            announcementService.updateConfig(config);
+        logger.info("Config reloaded successfully.");
     }
 
     public PluginConfig currentConfig() {
         return config != null ? config : PluginConfig.defaults();
+    }
+
+    public Logger logger() {
+        return logger;
     }
 
     private void registerCommand() {

@@ -12,6 +12,8 @@ public final class AnnouncementEntry {
     private final String color;
     private final String overlay;
     private final int durationSeconds;
+    private final String sound;
+    private final int animationSpeed;
 
     public AnnouncementEntry(
         AnnounceMode mode,
@@ -24,7 +26,9 @@ public final class AnnouncementEntry {
         float progress,
         String color,
         String overlay,
-        int durationSeconds
+        int durationSeconds,
+        String sound,
+        int animationSpeed
     ) {
         this.mode = mode;
         this.message = message;
@@ -37,6 +41,8 @@ public final class AnnouncementEntry {
         this.color = color;
         this.overlay = overlay;
         this.durationSeconds = durationSeconds;
+        this.sound = sound;
+        this.animationSpeed = animationSpeed;
     }
 
     public AnnounceMode mode() {
@@ -81,5 +87,13 @@ public final class AnnouncementEntry {
 
     public int durationSeconds() {
         return durationSeconds;
+    }
+
+    public String sound() {
+        return sound;
+    }
+
+    public int animationSpeed() {
+        return animationSpeed;
     }
 }

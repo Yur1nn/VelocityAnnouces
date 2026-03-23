@@ -86,17 +86,7 @@ public final class AnnounceCommand implements SimpleCommand {
         AnnounceMode mode = AnnounceMode.fromString(args[1]);
         String payload = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
 
-        switch (mode) {
-            case CHAT -> announcementService.broadcastChat(payload);
-            case ACTIONBAR -> announcementService.broadcastActionbar(payload);
-            case BOSSBAR -> announcementService.broadcastBossbar(payload, 1.0f, "blue", "progress", 5);
-            case TITLE -> {
-                String[] split = payload.split("\\|", 2);
-                String title = split.length > 0 ? split[0].trim() : payload;
-                String subtitle = split.length > 1 ? split[1].trim() : "";
-                announcementService.broadcastTitle(title, subtitle, 300, 2000, 400);
-            }
-        }
+            announcementService.broadcastEmergency(payload, mode);
 
         source.sendMessage(msg("<green>Announcement sent.</green>"));
     }

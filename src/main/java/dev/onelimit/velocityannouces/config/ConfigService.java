@@ -1,7 +1,7 @@
 package dev.onelimit.velocityannouces.config;
 
 import dev.onelimit.velocityannouces.model.AnnounceMode;
-import dev.onelimit.velocityannouces.model.AnnouncementEntry;
+import dev.onelimit.velocityannouces.model.AnnouncementTypeConfig;
 import dev.onelimit.velocityannouces.model.PluginConfig;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.Yaml;
@@ -65,23 +65,8 @@ public final class ConfigService {
 
     @SuppressWarnings("unchecked")
     private PluginConfig parse(Map<?, ?> root) {
-        Map<String, Object> announcer = firstMap(root, "announcer", "auto-announcement");
-        boolean autoEnabled = bool(announcer.get("enabled"), true);
-        int intervalSeconds = integer(announcer.get("interval-seconds"), 120);
-        boolean randomPick = parseSelection(announcer);
-
-        Map<String, Object> delivery = map(root.get("delivery"));
-        Map<String, Object> titleDefaults = map(delivery.get("title"));
-        Map<String, Object> bossbarDefaults = map(delivery.get("bossbar"));
-
-        int defaultTitleFadeIn = integer(titleDefaults.get("fade-in-ms"), 400);
-        int defaultTitleStay = integer(titleDefaults.get("stay-ms"), 2200);
-        int defaultTitleFadeOut = integer(titleDefaults.get("fade-out-ms"), 500);
-
-        float defaultBossbarProgress = decimal(bossbarDefaults.get("progress"), 1.0f);
-        String defaultBossbarColor = string(bossbarDefaults.get("color"), "blue");
-        String defaultBossbarOverlay = string(bossbarDefaults.get("overlay"), "progress");
-        int defaultBossbarDuration = integer(bossbarDefaults.get("duration-seconds"), 5);
+        int configVersion = integer(root.get("config-version"), 2);
+        boolean debug = bool(root.get("debug"), false);
 
         Map<String, Object> command = map(root.get("command"));
         boolean commandEnabled = bool(command.get("enabled"), true);
@@ -105,47 +90,69 @@ public final class ConfigService {
             aliases.add("vannounce");
         }
 
-        List<AnnouncementEntry> entries = new ArrayList<>();
-        Object announcementsNode = null;
-        Map<String, Object> messages = map(root.get("messages"));
-        if (!messages.isEmpty()) {
-            announcementsNode = messages.get("auto");
-        }
-        if (!(announcementsNode instanceof List<?>)) {
-            announcementsNode = root.get("announcements");
-        }
-
-        if (announcementsNode instanceof List<?> list) {
-            for (Object node : list) {
-                Map<String, Object> row = map(node);
-                String rawMode = string(row.get("mode"), string(row.get("type"), "chat"));
-                AnnounceMode mode = AnnounceMode.fromString(rawMode);
-                String message = string(row.get("message"), "");
-                String title = string(row.get("title"), "");
-                String subtitle = string(row.get("subtitle"), "");
-
-                int fadeInMs = integer(row.get("fade-in-ms"), defaultTitleFadeIn);
-                int stayMs = integer(row.get("stay-ms"), defaultTitleStay);
-                int fadeOutMs = integer(row.get("fade-out-ms"), defaultTitleFadeOut);
-
-                float progress = decimal(row.get("progress"), defaultBossbarProgress);
-                String color = string(row.get("color"), defaultBossbarColor);
-                String overlay = string(row.get("overlay"), defaultBossbarOverlay);
-                int duration = integer(row.get("duration-seconds"), defaultBossbarDuration);
-
-                entries.add(new AnnouncementEntry(mode, message, title, subtitle, fadeInMs, stayMs, fadeOutMs, progress, color, overlay, duration));
-            }
-        }
+        AnnouncementTypeConfig chatConfig = parseTypeConfig(root, "chat", AnnounceMode.CHAT);
+        AnnouncementTypeConfig actionbarConfig = parseTypeConfig(root, "actionbar", AnnounceMode.ACTIONBAR);
+        AnnouncementTypeConfig titleConfig = parseTypeConfig(root, "title", AnnounceMode.TITLE);
+        AnnouncementTypeConfig bossbarConfig = parseTypeConfig(root, "bossbar", AnnounceMode.BOSSBAR);
 
         return new PluginConfig(
-            autoEnabled,
-            Math.max(5, intervalSeconds),
-            randomPick,
+            configVersion,
+            debug,
             commandEnabled,
             aliases,
             commandRequirePermission,
             commandPermission,
-            entries
+            chatConfig,
+            actionbarConfig,
+            titleConfig,
+            bossbarConfig
+        );
+    }
+
+    private AnnouncementTypeConfig parseTypeConfig(Map<?, ?> root, String typeKey, AnnounceMode mode) {
+        Map<String, Object> section = map(root.get(typeKey));
+        
+        boolean enabled = bool(section.get("enabled"), true);
+        int intervalSeconds = Math.max(5, integer(section.get("interval-seconds"), 120));
+        boolean randomSelection = !"round-robin".equalsIgnoreCase(string(section.get("selection"), "random").trim());
+        
+        List<String> messages = new ArrayList<>();
+        Object messagesNode = section.get("messages");
+        if (messagesNode instanceof List<?> list) {
+            for (Object item : list) {
+                if (item instanceof String str) {
+                    messages.add(str);
+                } else if (item instanceof Map<?, ?> map && mode == AnnounceMode.TITLE) {
+                    // Title messages have title/subtitle structure
+                    String title = string(map.get("title"), "");
+                    String subtitle = string(map.get("subtitle"), "");
+                    if (!title.isEmpty()) {
+                        messages.add(title + "|" + subtitle);
+                    }
+                }
+            }
+        }
+
+        int fadeInMs = integer(section.get("fade-in-ms"), 400);
+        int stayMs = integer(section.get("stay-ms"), 2200);
+        int fadeOutMs = integer(section.get("fade-out-ms"), 500);
+
+        Map<String, Object> defaults = map(section.get("defaults"));
+        String defaultColor = string(defaults.get("color"), "blue");
+        String defaultOverlay = string(defaults.get("overlay"), "progress");
+        int animationSpeed = integer(defaults.get("animation-speed"), 5);
+
+        return new AnnouncementTypeConfig(
+            enabled,
+            intervalSeconds,
+            randomSelection,
+            messages,
+            fadeInMs,
+            stayMs,
+            fadeOutMs,
+            defaultColor,
+            defaultOverlay,
+            animationSpeed
         );
     }
 
