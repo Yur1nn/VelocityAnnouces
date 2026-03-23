@@ -129,6 +129,12 @@ public final class ConfigService {
                     if (!title.isEmpty()) {
                         messages.add(title + "|" + subtitle);
                     }
+                } else if (item instanceof Map<?, ?> map && mode == AnnounceMode.BOSSBAR) {
+                    // Bossbar messages are defined as maps with a "message" field.
+                    String message = string(map.get("message"), "");
+                    if (!message.isEmpty()) {
+                        messages.add(message);
+                    }
                 }
             }
         }
